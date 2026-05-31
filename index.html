@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Strategist — CH Prospect Puller v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B2A4A;--navy2:#0f1e36;--teal:#2E8B7A;
+  --gold:#C9A84C;--gold2:#e8c96a;
+  --border:#2a3d5c;--muted:#6B7A8D;
+  --green:#1D9E75;--red:#E24B4A;--amber:#E8940A;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--navy2);color:#fff;min-height:100vh;padding:1.5rem}
+.header{display:flex;align-items:center;gap:14px;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px solid rgba(201,168,76,0.15)}
+.brand-mark{width:42px;height:42px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--navy);flex-shrink:0}
+.brand h1{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;line-height:1}
+.brand p{font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+.panel{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.panel-hdr{padding:11px 16px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.panel-body{padding:14px 16px}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:0.04em}
+select,input[type=text],input[type=password],textarea.sic-input{width:100%;padding:7px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:7px;font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s}
+select:focus,input:focus,textarea:focus{border-color:rgba(201,168,76,0.4)}
+select option{background:#1a2840;color:#fff}
+textarea.sic-input{resize:vertical;min-height:70px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.6}
+.checkbox-group{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.checkbox-group::-webkit-scrollbar{width:3px}
+.checkbox-group::-webkit-scrollbar-thumb{background:var(--border)}
+.checkbox-item{display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,0.7);cursor:pointer;padding:2px 0}
+.checkbox-item input{width:13px;height:13px;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
+.sic-tabs{display:flex;gap:4px;margin-bottom:10px}
+.sic-tab{padding:4px 10px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.sic-tab.active{background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.4);color:var(--gold2)}
+.sic-panel{display:none}.sic-panel.active{display:block}
+.tag-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.sic-tag-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(46,139,122,0.15);border:1px solid rgba(46,139,122,0.3);border-radius:10px;font-size:10px;color:#5ecfbc;font-family:'DM Mono',monospace}
+.sic-tag-pill button{background:none;border:none;color:#5ecfbc;cursor:pointer;font-size:12px;line-height:1;padding:0 0 0 2px}
+.btn-run{width:100%;padding:11px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.15s,transform 0.1s;letter-spacing:0.04em}
+.btn-run:hover{opacity:0.92;transform:translateY(-1px)}
+.btn-run:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-secondary{padding:5px 10px;font-size:11px;font-family:'DM Sans',sans-serif;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.15s}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
+.api-note{font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:8px;padding:8px 10px;background:rgba(201,168,76,0.06);border-radius:6px;border-left:2px solid rgba(201,168,76,0.3)}
+.api-note a{color:var(--gold2);text-decoration:none}
+.log-box{background:rgba(0,0,0,0.3);border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.45);max-height:72px;overflow-y:auto;margin-top:10px;line-height:1.6;white-space:pre-wrap}
+.results-toolbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.results-info{font-size:12px;color:var(--muted)}
+.results-info strong{color:var(--gold)}
+.toolbar-btns{display:flex;gap:5px;flex-wrap:wrap}
+.btn-sm{padding:5px 11px;font-size:11px;font-family:'DM Sans',sans-serif;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.15s}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm.gold{background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.4);color:var(--gold2)}
+.progress-bar{height:3px;background:rgba(255,255,255,0.05);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--teal));width:0%;transition:width 0.4s}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{border-bottom:1px solid var(--border);position:sticky;top:0;background:#0f1e36;z-index:2}
+th{padding:9px 12px;text-align:left;font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.1s}
+tbody tr:hover{background:rgba(255,255,255,0.025)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 12px;vertical-align:top}
+.co-name{font-weight:500;color:#fff;font-size:13px;line-height:1.2}
+.co-no{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px}
+.co-addr{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:500;white-space:nowrap}
+.b-active{background:rgba(29,158,117,0.2);color:#5ecfbc;border:1px solid rgba(29,158,117,0.3)}
+.b-dissolved{background:rgba(226,75,74,0.15);color:#f08080;border:1px solid rgba(226,75,74,0.3)}
+.b-overdue{background:rgba(232,148,10,0.2);color:#f5b942;border:1px solid rgba(232,148,10,0.3)}
+.b-other{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.1)}
+.officer-item{font-size:11.5px;color:rgba(255,255,255,0.85);margin-bottom:3px}
+.officer-role{font-size:9.5px;color:var(--muted);display:block}
+.action-btns{display:flex;gap:4px;flex-wrap:wrap}
+.abn{display:inline-flex;align-items:center;gap:3px;padding:4px 8px;border-radius:5px;font-size:10px;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;font-weight:500;text-decoration:none;white-space:nowrap;transition:all 0.15s}
+.abn-li{background:rgba(10,102,194,0.2);color:#5ba3d9;border:1px solid rgba(10,102,194,0.3)}
+.abn-li:hover{background:rgba(10,102,194,0.35)}
+.abn-ch{background:rgba(46,139,122,0.15);color:#5ecfbc;border:1px solid rgba(46,139,122,0.3)}
+.abn-ch:hover{background:rgba(46,139,122,0.3)}
+.abn-msg{background:rgba(201,168,76,0.15);color:var(--gold2);border:1px solid rgba(201,168,76,0.3)}
+.abn-msg:hover{background:rgba(201,168,76,0.25)}
+.abn-del{background:rgba(226,75,74,0.1);color:#f08080;border:1px solid rgba(226,75,74,0.2);cursor:pointer}
+.abn-del:hover{background:rgba(226,75,74,0.2)}
+.empty-state{padding:48px 24px;text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:500;transform:translateY(60px);opacity:0;transition:all 0.25s;z-index:200}
+.toast.show{transform:translateY(0);opacity:1}
+.results-scroll{max-height:640px;overflow-y:auto}
+.results-scroll::-webkit-scrollbar{width:4px}
+.results-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.filter-strip{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.flt-btn{padding:3px 10px;font-size:10.5px;font-family:'DM Sans',sans-serif;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.flt-btn.active{background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.4);color:var(--gold2)}
+.postcode-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.pc-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(10,102,194,0.15);border:1px solid rgba(10,102,194,0.3);border-radius:10px;font-size:10px;color:#5ba3d9;font-family:'DM Mono',monospace}
+.pc-tag button{background:none;border:none;color:#5ba3d9;cursor:pointer;font-size:12px;padding:0 0 0 2px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand-mark">TA</div>
+  <div class="brand">
+    <h1>Companies House Prospect Puller</h1>
+    <p>The Strategist · v2 · Companies, Directors & Officers for LinkedIn Outreach</p>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- LEFT CONTROLS -->
+  <div>
+
+    <!-- API KEY -->
+    <div class="panel">
+      <div class="panel-hdr">API Key</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Companies House Client ID</label>
+          <input type="password" id="api-key" placeholder="Paste Client ID here">
+        </div>
+        <button class="btn-secondary" style="width:100%;margin-top:6px" onclick="testConnection()">Test connection →</button><div class="api-note" style="margin-top:8px">Free key from <a href="https://developer.company-information.service.gov.uk" target="_blank">developer.company-information.service.gov.uk</a> — paste your <strong style="color:#fff">Client ID</strong> and click Test first.</div>
+      </div>
+    </div>
+
+    <!-- SIC CODES -->
+    <div class="panel">
+      <div class="panel-hdr">
+        Sectors / SIC Codes
+        <button class="btn-secondary" onclick="clearAllSics()">Clear all</button>
+      </div>
+      <div class="panel-body">
+        <div class="sic-tabs">
+          <button class="sic-tab active" onclick="showSicTab('preset',this)">Presets</button>
+          <button class="sic-tab" onclick="showSicTab('custom',this)">Custom SIC</button>
+          <button class="sic-tab" onclick="showSicTab('all',this)">All sectors</button>
+        </div>
+
+        <!-- PRESET -->
+        <div class="sic-panel active" id="sic-preset">
+          <div class="checkbox-group" id="preset-checks">
+            <label class="checkbox-item"><input type="checkbox" value="87100" checked> 87100 — Care homes</label>
+            <label class="checkbox-item"><input type="checkbox" value="87200" checked> 87200 — Mental health care</label>
+            <label class="checkbox-item"><input type="checkbox" value="87300" checked> 87300 — Elderly residential care</label>
+            <label class="checkbox-item"><input type="checkbox" value="87900"> 87900 — Other residential care</label>
+            <label class="checkbox-item"><input type="checkbox" value="80100" checked> 80100 — Security firms</label>
+            <label class="checkbox-item"><input type="checkbox" value="80200"> 80200 — Security systems</label>
+            <label class="checkbox-item"><input type="checkbox" value="49320" checked> 49320 — Taxi & private hire</label>
+            <label class="checkbox-item"><input type="checkbox" value="49390"> 49390 — Other passenger transport</label>
+            <label class="checkbox-item"><input type="checkbox" value="68209"> 68209 — Property letting</label>
+            <label class="checkbox-item"><input type="checkbox" value="68100"> 68100 — Property buying & selling</label>
+            <label class="checkbox-item"><input type="checkbox" value="56101"> 56101 — Restaurants</label>
+            <label class="checkbox-item"><input type="checkbox" value="56302"> 56302 — Public houses & bars</label>
+            <label class="checkbox-item"><input type="checkbox" value="43210"> 43210 — Electrical contractors</label>
+            <label class="checkbox-item"><input type="checkbox" value="43220"> 43220 — Plumbing & heating</label>
+            <label class="checkbox-item"><input type="checkbox" value="43341"> 43341 — Painting & decorating</label>
+            <label class="checkbox-item"><input type="checkbox" value="96020"> 96020 — Hair & beauty salons</label>
+            <label class="checkbox-item"><input type="checkbox" value="85100"> 85100 — Childcare / nurseries</label>
+            <label class="checkbox-item"><input type="checkbox" value="69201"> 69201 — Accounting & auditing</label>
+            <label class="checkbox-item"><input type="checkbox" value="70229"> 70229 — Business consultancy</label>
+            <label class="checkbox-item"><input type="checkbox" value="47190"> 47190 — Retail stores</label>
+          </div>
+        </div>
+
+        <!-- CUSTOM -->
+        <div class="sic-panel" id="sic-custom">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Enter SIC codes — one per line or comma separated</label>
+          <textarea class="sic-input" id="custom-sic-input" placeholder="87100&#10;80100&#10;49320&#10;or: 87100, 80100, 49320"></textarea>
+          <button class="btn-secondary" style="margin-top:6px;width:100%" onclick="addCustomSics()">Add SIC codes</button>
+          <div class="tag-row" id="custom-sic-tags"></div>
+        </div>
+
+        <!-- ALL SECTORS -->
+        <div class="sic-panel" id="sic-all">
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;padding:8px 0">
+            Search across <strong style="color:#fff">all sectors</strong> using a company name keyword or postcode only — no SIC filter applied. Use this to find any Ltd company regardless of industry.<br><br>
+            <span style="font-size:11px;color:var(--muted)">Set your keyword or postcode filters below then run the search.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <div class="panel">
+      <div class="panel-hdr">Location filter</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Postcode area(s) — press Enter to add each one</label>
+          <input type="text" id="postcode-input" placeholder="e.g. E1, E14, SW1, M1, B1..." onkeydown="addPostcode(event)">
+          <div class="postcode-tags" id="postcode-tags"></div>
+        </div>
+        <div class="field">
+          <label>Or enter full postcode / town</label>
+          <input type="text" id="location-text" placeholder="e.g. Manchester, Birmingham, Leeds">
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="panel">
+      <div class="panel-hdr">Search filters</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Company status</label>
+          <select id="status-filter">
+            <option value="active" selected>Active only</option>
+            <option value="dissolved">Dissolved</option>
+            <option value="all">All statuses</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Results per SIC code</label>
+          <select id="results-count">
+            <option value="10">10 per sector</option>
+            <option value="20" selected>20 per sector</option>
+            <option value="50">50 per sector</option>
+            <option value="100">100 per sector</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Company name keyword (optional)</label>
+          <input type="text" id="keyword" placeholder="e.g. care, security, group, london...">
+        </div>
+        <div class="field">
+          <label>Show overdue filings only</label>
+          <select id="overdue-filter">
+            <option value="no" selected>No — show all</option>
+            <option value="yes">Yes — overdue accounts or CS only</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fetch director names (slower but more complete)</label>
+          <select id="fetch-officers">
+            <option value="yes" selected>Yes — fetch directors for each company</option>
+            <option value="no">No — company info only (faster)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-run" id="run-btn" onclick="runSearch()">Pull companies & directors →</button>
+    <div class="log-box" id="log-box">Ready — configure and click Pull...</div>
+
+  </div>
+
+  <!-- RESULTS -->
+  <div class="panel" style="margin-bottom:0">
+    <div class="results-toolbar">
+      <div class="results-info">
+        <strong id="res-count">0</strong> companies · <strong id="dir-count">0</strong> directors
+      </div>
+      <div class="toolbar-btns">
+        <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
+        <button class="btn-sm gold" onclick="copyAllNames()">Copy names → Prospect Finder</button>
+        <button class="btn-sm" onclick="clearResults()">Clear</button>
+      </div>
+    </div>
+    <div class="filter-strip">
+      <button class="flt-btn active" onclick="filterTable('all',this)">All</button>
+      <button class="flt-btn" onclick="filterTable('active',this)">Active</button>
+      <button class="flt-btn" onclick="filterTable('overdue',this)">Overdue filings</button>
+      <button class="flt-btn" onclick="filterTable('dissolved',this)">Dissolved</button>
+      <button class="flt-btn" onclick="filterTable('directors',this)">Has directors</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="results-scroll">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>SIC</th>
+            <th>Directors / Officers</th>
+            <th>Filings</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="results-body">
+          <tr><td colspan="7"><div class="empty-state">Configure your search and click Pull<br><span style="font-size:11px">Companies and their directors will appear here</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let allResults = [];
+let customSics = [];
+let postcodes = [];
+let activeFilter = 'all';
+
+// ── SIC TAB TOGGLE ──
+function showSicTab(tab, btn){
+  document.querySelectorAll('.sic-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sic-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sic-'+tab).classList.add('active');
+}
+
+function clearAllSics(){
+  document.querySelectorAll('#preset-checks input').forEach(i=>i.checked=false);
+  customSics=[];
+  renderCustomTags();
+  showToast('All SIC codes cleared');
+}
+
+function addCustomSics(){
+  const raw = document.getElementById('custom-sic-input').value;
+  const codes = raw.split(/[\n,]+/).map(s=>s.trim()).filter(s=>/^\d{5}$/.test(s));
+  codes.forEach(c=>{ if(!customSics.includes(c)) customSics.push(c); });
+  document.getElementById('custom-sic-input').value='';
+  renderCustomTags();
+  if(codes.length) showToast(`${codes.length} SIC code${codes.length>1?'s':''} added`);
+}
+
+function removeCustomSic(code){
+  customSics = customSics.filter(c=>c!==code);
+  renderCustomTags();
+}
+
+function renderCustomTags(){
+  document.getElementById('custom-sic-tags').innerHTML =
+    customSics.map(c=>`<span class="sic-tag-pill">${c}<button onclick="removeCustomSic('${c}')">×</button></span>`).join('');
+}
+
+// ── POSTCODE ──
+function addPostcode(e){
+  if(e.key!=='Enter') return;
+  const val = e.target.value.trim().toUpperCase().replace(/\s+/g,'');
+  if(val && !postcodes.includes(val)){ postcodes.push(val); renderPostcodeTags(); }
+  e.target.value='';
+  e.preventDefault();
+}
+
+function removePostcode(pc){
+  postcodes = postcodes.filter(p=>p!==pc);
+  renderPostcodeTags();
+}
+
+function renderPostcodeTags(){
+  document.getElementById('postcode-tags').innerHTML =
+    postcodes.map(p=>`<span class="pc-tag">${p}<button onclick="removePostcode('${p}')">×</button></span>`).join('');
+}
+
+// ── GET SICS TO SEARCH ──
+function getActiveSics(){
+  const activeTab = document.querySelector('.sic-tab.active').textContent.trim().toLowerCase();
+  if(activeTab==='all sectors') return ['ALL'];
+  const presetChecked = Array.from(document.querySelectorAll('#preset-checks input:checked')).map(i=>i.value);
+  return [...new Set([...presetChecked, ...customSics])];
+}
+
+// ── API CALL ──
+async function apiFetch(path, apiKey){
+  const url = 'https://api.company-information.service.gov.uk' + path;
+  const authStr = (window._workingAuth) ? window._workingAuth : btoa(apiKey.trim() + ':');
+  const resp = await fetch(url, {
+    method: 'GET',
+    headers: { 'Authorization': 'Basic ' + authStr, 'Accept': 'application/json' }
+  });
+  if(!resp.ok){
+    const txt = await resp.text();
+    throw new Error(`${resp.status}: ${txt.slice(0,200)}`);
+  }
+  return resp.json();
+}
+
+// ── TEST CONNECTION ──
+async function testConnection(){
+  const apiKey = document.getElementById('api-key').value.trim();
+  if(!apiKey){ showToast('Enter your API key first'); return; }
+  log('Testing with 4 auth methods...');
+  const url = 'https://api.company-information.service.gov.uk/company/00445790';
+  const methods = [
+    { label: 'key:  (standard)',   enc: btoa(apiKey + ':') },
+    { label: ':key  (alt)',        enc: btoa(':' + apiKey) },
+    { label: 'key   (no colon)',   enc: btoa(apiKey) },
+    { label: 'key:key (both)',     enc: btoa(apiKey + ':' + apiKey) },
+  ];
+  window._workingAuth = null;
+  for(const m of methods){
+    try{
+      log('  Trying ' + m.label);
+      const r = await fetch(url, { headers: {'Authorization':'Basic '+m.enc,'Accept':'application/json'} });
+      if(r.ok){
+        const d = await r.json();
+        window._workingAuth = m.enc;
+        log('\u2713 SUCCESS: ' + m.label);
+        log('  Company: ' + (d.company_name||'data received'));
+        showToast('\u2713 Connected successfully');
+        return;
+      } else {
+        const t = await r.text(); log('  x ' + r.status + ' ' + t.slice(0,60));
+      }
+    } catch(e){ log('  x Error: ' + e.message); }
+    await new Promise(r=>setTimeout(r,400));
+  }
+  log('');
+  log('All 4 methods failed. Please verify:');
+  log('  1. Using CLIENT ID (not client secret)');
+  log('  2. Application set to LIVE not test');
+  log('  3. No spaces in the pasted key');
+  log('  Key preview: ' + apiKey.slice(0,8) + '... (' + apiKey.length + ' chars)');
+  showToast('Connection failed — see log');
+}
+
+// ── MAIN SEARCH ──
+async function runSearch(){
+  const apiKey = document.getElementById('api-key').value.trim();
+  if(!apiKey){ showToast('Please enter your Companies House API key'); return; }
+
+  const sics = getActiveSics();
+  if(!sics.length){ showToast('Select at least one sector or SIC code'); return; }
+
+  const statusFilter = document.getElementById('status-filter').value;
+  const countPer = parseInt(document.getElementById('results-count').value);
+  const keyword = document.getElementById('keyword').value.trim();
+  const locationText = document.getElementById('location-text').value.trim();
+  const overdueOnly = document.getElementById('overdue-filter').value==='yes';
+  const fetchOfficers = document.getElementById('fetch-officers').value==='yes';
+
+  // Build location query parts
+  const locationParts = [...postcodes];
+  if(locationText) locationParts.push(locationText);
+  const locationQuery = locationParts.join(' ');
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled=true; btn.textContent='Pulling data...';
+  document.getElementById('log-box').textContent='Starting...';
+  allResults=[];
+  document.getElementById('results-body').innerHTML='';
+  document.getElementById('res-count').textContent='0';
+  document.getElementById('dir-count').textContent='0';
+  setProgress(0);
+
+  let totalCo=0, totalDir=0;
+  const isAll = sics[0]==='ALL';
+  const searchSics = isAll ? [''] : sics;
+
+  for(let s=0; s<searchSics.length; s++){
+    const sic = searchSics[s];
+    log(`Searching ${sic ? 'SIC '+sic : 'all sectors'}${locationQuery?' in '+locationQuery:''}...`);
+
+    try{
+      // Build query string - use /search/companies endpoint (works with basic key)
+      const q = [keyword, locationQuery, sic ? '' : ''].filter(Boolean).join(' ').trim() || (sic ? '' : 'limited');
+      
+      // Use /search/companies for general search
+      const searchQ = encodeURIComponent([keyword||'', locationQuery||''].filter(Boolean).join(' ') || 'ltd');
+      let endpoint = `/search/companies?q=${searchQ}&items_per_page=${Math.min(countPer,100)}`;
+
+      const data = await apiFetch(endpoint, apiKey);
+      let companies = (data.items || []);
+
+      // Filter by SIC if needed
+      if(sic){
+        companies = companies.filter(co =>
+          (co.sic_codes || []).some(s => s.startsWith(sic))
+        );
+      }
+
+      // Filter by status
+      if(statusFilter!=='all'){
+        companies = companies.filter(co =>
+          (co.company_status||'').toLowerCase() === statusFilter
+        );
+      }
+
+      // Filter overdue - need to fetch individual company data
+      log(`  → ${companies.length} companies after filters`);
+
+      for(let c=0; c<companies.length; c++){
+        const co = companies[c];
+        setProgress(Math.round(((s*countPer+c)/(searchSics.length*countPer))*85));
+
+        let coDetail = co;
+        let officers = [];
+        let accountsOverdue = false;
+        let csOverdue = false;
+        let accountsDue = '';
+        let csDue = '';
+
+        // Fetch full company detail for filing info
+        try{
+          coDetail = await apiFetch(`/company/${co.company_number}`, apiKey);
+          accountsOverdue = coDetail.accounts?.overdue || false;
+          csOverdue = coDetail.confirmation_statement?.overdue || false;
+          accountsDue = coDetail.accounts?.next_due || '';
+          csDue = coDetail.confirmation_statement?.next_due || '';
+        } catch(e){ /* use basic data */ }
+
+        // Skip if overdue filter on and not overdue
+        if(overdueOnly && !accountsOverdue && !csOverdue) continue;
+
+        // Fetch officers if enabled
+        if(fetchOfficers){
+          try{
+            const offData = await apiFetch(`/company/${co.company_number}/officers?items_per_page=10`, apiKey);
+            officers = (offData.items||[])
+              .filter(o=>!o.resigned_on)
+              .filter(o=>['director','secretary','llp-member','corporate-director','corporate-llp-member'].includes(o.officer_role))
+              .map(o=>({
+                name: formatName(o.name),
+                role: o.officer_role.replace(/-/g,' '),
+                appointed: o.appointed_on||''
+              }));
+          } catch(e){}
+        }
+
+        const addr = coDetail.registered_office_address || co.address || {};
+        const addrStr = [addr.address_line_1, addr.address_line_2, addr.locality, addr.postal_code].filter(Boolean).join(', ');
+
+        const sicCodes = coDetail.sic_codes || co.sic_codes || (sic ? [sic] : []);
+
+        const row = {
+          companyName: co.title || co.company_name || '',
+          companyNo: co.company_number || '',
+          status: coDetail.company_status || co.company_status || '',
+          sics: sicCodes,
+          address: addrStr,
+          accountsOverdue, csOverdue, accountsDue, csDue,
+          incorporated: coDetail.date_of_creation || co.date_of_creation || '',
+          officers
+        };
+
+        allResults.push(row);
+        totalCo++;
+        totalDir += officers.length;
+
+        appendRow(row, totalCo);
+        document.getElementById('res-count').textContent = totalCo;
+        document.getElementById('dir-count').textContent = totalDir;
+
+        await delay(120);
+      }
+
+    } catch(e){
+      log(`  ✗ Error: ${e.message}`);
+      console.error(e);
+    }
+
+    await delay(400);
+    setProgress(Math.round(((s+1)/searchSics.length)*85));
+  }
+
+  setProgress(100);
+  log(`Complete — ${totalCo} companies, ${totalDir} directors`);
+  btn.disabled=false; btn.textContent='Pull companies & directors →';
+  showToast(`Done — ${totalCo} companies pulled`);
+}
+
+function formatName(raw){
+  // CH returns names as "SURNAME, Firstname" — reformat
+  if(!raw) return '';
+  const parts = raw.split(',');
+  if(parts.length>=2){
+    return parts.slice(1).join(' ').trim() + ' ' + parts[0].trim();
+  }
+  return raw;
+}
+
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// ── RENDER ROW ──
+function appendRow(row, idx){
+  const tbody = document.getElementById('results-body');
+  const empty = tbody.querySelector('td[colspan]');
+  if(empty) empty.closest('tr').remove();
+
+  const statusBadge = s => {
+    if(s==='active') return '<span class="badge b-active">Active</span>';
+    if(s==='dissolved') return '<span class="badge b-dissolved">Dissolved</span>';
+    return `<span class="badge b-other">${s||'Unknown'}</span>`;
+  };
+
+  const filingHtml = [];
+  if(row.accountsOverdue) filingHtml.push('<span class="badge b-overdue">Accounts overdue</span>');
+  if(row.csOverdue) filingHtml.push('<span class="badge b-overdue">CS overdue</span>');
+  if(row.accountsDue && !row.accountsOverdue) filingHtml.push(`<span style="font-size:10px;color:var(--muted)">Due: ${row.accountsDue}</span>`);
+
+  const officersHtml = row.officers.length
+    ? row.officers.map(o=>`<div class="officer-item">${o.name}<span class="officer-role">${o.role}</span></div>`).join('')
+    : '<span style="font-size:10px;color:var(--muted);font-style:italic">—</span>';
+
+  const firstName = row.officers[0]?.name || '';
+  const liQuery = encodeURIComponent((firstName || row.companyName.replace(/\s+(LTD|LIMITED)$/i,'').trim()));
+  const liUrl = `https://www.linkedin.com/search/results/people/?keywords=${liQuery}`;
+  const chUrl = `https://find-and-update.company-information.service.gov.uk/company/${row.companyNo}`;
+  const sicStr = row.sics.slice(0,2).join(', ') || '—';
+
+  const msgType = (row.accountsOverdue||row.csOverdue) ? 'overdue' : 'general';
+
+  const coSafe = row.companyName.replace(/'/g,"\\'");
+  const dirSafe = firstName.replace(/'/g,"\\'");
+
+  const tr = document.createElement('tr');
+  tr.dataset.status = row.status;
+  tr.dataset.overdue = (row.accountsOverdue||row.csOverdue) ? 'yes' : 'no';
+  tr.dataset.hasdirectors = row.officers.length ? 'yes' : 'no';
+
+  tr.innerHTML = `
+    <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${idx}</td>
+    <td style="min-width:160px">
+      <div class="co-name">${row.companyName}</div>
+      <div class="co-no">${row.companyNo}</div>
+      <div class="co-addr">${row.address}</div>
+      ${row.incorporated ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">Inc: ${row.incorporated}</div>` : ''}
+    </td>
+    <td>${statusBadge(row.status)}</td>
+    <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${sicStr}</span></td>
+    <td style="min-width:160px"><div>${officersHtml}</div></td>
+    <td style="min-width:120px"><div style="display:flex;flex-direction:column;gap:4px">${filingHtml.join('')||'<span style="font-size:10px;color:var(--muted)">Up to date</span>'}</div></td>
+    <td style="min-width:130px">
+      <div class="action-btns">
+        <a class="abn abn-li" href="${liUrl}" target="_blank">LinkedIn</a>
+        <a class="abn abn-ch" href="${chUrl}" target="_blank">CH</a>
+        <button class="abn abn-msg" onclick="copyMessage('${coSafe}','${dirSafe}','${msgType}')">Copy msg</button>
+        <button class="abn abn-del" onclick="this.closest('tr').remove();showToast('Removed')">×</button>
+      </div>
+    </td>`;
+  tbody.appendChild(tr);
+  applyFilter();
+}
+
+// ── FILTER ──
+function filterTable(f, btn){
+  activeFilter = f;
+  document.querySelectorAll('.flt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
+
+function applyFilter(){
+  document.querySelectorAll('#results-body tr').forEach(tr=>{
+    if(!tr.dataset.status){ tr.style.display=''; return; }
+    let show = true;
+    if(activeFilter==='active') show = tr.dataset.status==='active';
+    else if(activeFilter==='overdue') show = tr.dataset.overdue==='yes';
+    else if(activeFilter==='dissolved') show = tr.dataset.status==='dissolved';
+    else if(activeFilter==='directors') show = tr.dataset.hasdirectors==='yes';
+    tr.style.display = show ? '' : 'none';
+  });
+}
+
+// ── MESSAGES ──
+const MSGS = {
+  general:(co,dir)=>`Hi ${dir||'[Director Name]'},\n\nDoes your business stop when you do?\n\nHaving consulted for some of the world's largest organisations and now working closely with smaller businesses, almost every business I've reviewed had at least one thing costing them significantly that nobody had ever flagged.\n\nFor businesses like ${co} I've helped identify overlooked tax savings, automate manual processes that were quietly costing hours every week, and build solutions that allow the business to run without everything depending on one person.\n\nI'm currently offering a free audit to a small number of selected businesses that are a good fit for what I do. Based on your profile I think there's something useful here.\n\nWould you be open to a 30-minute conversation?\n\nTobi Moses Alabi ACCA\nAccountant · Business Advisor · Fractional CFO`,
+  overdue:(co,dir)=>`Hi ${dir||'[Director Name]'},\n\nI hope you're well.\n\nI'm reaching out regarding the overdue accounts and/or confirmation statement for ${co} on Companies House.\n\nI understand these things can slip — running a business is demanding and filing deadlines aren't always front of mind. However overdue filings can quickly lead to penalties, a compulsory strike-off notice, or difficulties if you ever need finance.\n\nAs an ACCA qualified accountant I can help get things back on track quickly:\n\n• Filing overdue accounts from as little as £200\n• Submitting outstanding confirmation statements\n• Applying to reverse penalties where applicable\n• Setting up a system so deadlines are never missed again\n\nFeel free to get in touch for a free consultation.\n\nTobi Moses Alabi ACCA\nAccountant & Business Advisor`
+};
+
+function copyMessage(co,dir,type){
+  const msg = MSGS[type]?MSGS[type](co,dir):MSGS.general(co,dir);
+  navigator.clipboard.writeText(msg).then(()=>showToast('Message copied — paste into LinkedIn'));
+}
+
+// ── EXPORT ──
+function exportCSV(){
+  if(!allResults.length){ showToast('No results to export'); return; }
+  const headers=['Company Name','Company No','Status','SIC Codes','Address','Incorporated','Accounts Overdue','CS Overdue','Accounts Due','Directors'];
+  const rows=allResults.map(r=>[
+    `"${r.companyName}"`,r.companyNo,r.status,
+    `"${r.sics.join(', ')}"`,`"${r.address}"`,r.incorporated,
+    r.accountsOverdue,r.csOverdue,r.accountsDue,
+    `"${r.officers.map(o=>o.name).join(' | ')}"`
+  ]);
+  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='ch_prospects_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('CSV exported');
+}
+
+function copyAllNames(){
+  if(!allResults.length){ showToast('No results yet'); return; }
+  const names=allResults.map(r=>r.companyName+(r.companyNo?', '+r.companyNo:'')).join('\n');
+  navigator.clipboard.writeText(names).then(()=>showToast('Copied — paste into Prospect Finder'));
+}
+
+function clearResults(){
+  allResults=[];
+  document.getElementById('results-body').innerHTML='<tr><td colspan="7"><div class="empty-state">Results cleared</div></td></tr>';
+  document.getElementById('res-count').textContent='0';
+  document.getElementById('dir-count').textContent='0';
+  setProgress(0);
+}
+
+// ── UTILS ──
+function setProgress(p){ document.getElementById('progress').style.width=p+'%'; }
+function log(msg){
+  const b=document.getElementById('log-box');
+  b.textContent+='\n'+msg;
+  b.scrollTop=b.scrollHeight;
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
